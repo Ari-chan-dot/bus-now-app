@@ -1,0 +1,3 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color,route_sort_order,jp_parent_route_id
+351,9013401002381,調３４,,,3,,,,,
+1540,9013401002381,鷹６６,,,3,,,,,
