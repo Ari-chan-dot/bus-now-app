@@ -3,3 +3,4 @@ uvicorn
 requests
 gtfs-realtime-bindings
 pandas
+tzdata
