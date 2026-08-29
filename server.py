@@ -23,6 +23,7 @@ import asyncio
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from typing import Optional
 
@@ -34,6 +35,10 @@ from fastapi.staticfiles import StaticFiles
 from google.transit import gtfs_realtime_pb2
 
 from phase1_next_buses import ROUTE_DEFS, get_next_buses
+
+# Renderのサーバーはアメリカのタイムゾーン(UTC)で動いているため、
+# 「今何時か」は常に日本時間(JST)を明示して取得する
+JST = ZoneInfo("Asia/Tokyo")
 
 # ------------------------------------------------------------------
 # 設定
@@ -85,7 +90,7 @@ async def refresh_loop():
     while True:
         try:
             delay_cache = fetch_delay_by_trip_id()
-            cache_updated_at = datetime.now()
+            cache_updated_at = datetime.now(JST)
             print(f"[{cache_updated_at:%H:%M:%S}] 遅延キャッシュ更新: {len(delay_cache)}件")
         except Exception as e:
             # 取得に失敗しても、直前のキャッシュを使い続ける(アプリを止めない)
@@ -150,7 +155,7 @@ def apply_delay(bus, route_def):
 
 @app.get("/buses")
 def get_buses():
-    now = datetime.now()
+    now = datetime.now(JST)
     routes_output = []
     for rd in ROUTE_DEFS:
         if not rd["enabled"]:
