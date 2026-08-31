@@ -22,6 +22,7 @@
     --text: #23262b;
     --muted: #767d87;
     --amber: #c47a1b;
+    --predicted: #2f5fbf;
     --good: #2f9e52;
     --good-soft: #e6f6ea;
     --delay: #d0472b;
@@ -142,16 +143,18 @@
 
   .row .time {
     font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--amber);
     font-variant-numeric: tabular-nums;
   }
 
-  .row .minutes {
+  .row .time-predicted {
     font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
-    font-size: 13px;
-    color: var(--text);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--predicted);
+    font-variant-numeric: tabular-nums;
     margin-top: 2px;
   }
 
@@ -166,6 +169,29 @@
   .status.delay { background: var(--delay-soft); color: var(--delay); }
   .status.early { background: var(--early-soft); color: var(--early); }
   .status.muted { background: var(--muted-soft); color: var(--muted); }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .legend-dot.amber { background: var(--amber); }
+  .legend-dot.predicted { background: var(--predicted); }
 
   .footer-note {
     margin-top: 20px;
@@ -299,6 +325,14 @@
         r => r.company === view.company && r.direction === view.direction
       );
 
+      const legend = document.createElement("div");
+      legend.className = "legend";
+      legend.innerHTML = `
+        <span class="legend-item"><span class="legend-dot amber"></span>時刻表の予定時刻</span>
+        <span class="legend-item"><span class="legend-dot predicted"></span>遅延を反映した予想時刻</span>
+      `;
+      content.appendChild(legend);
+
       if (!routeData || routeData.buses.length === 0) {
         const empty = document.createElement("p");
         empty.className = "empty";
@@ -314,7 +348,7 @@
             <div>
               <div class="route">${bus.route_name}系統</div>
               <div class="time">${bus.arrival_time}</div>
-              <div class="minutes">あと${bus.minutes_from_now}分</div>
+              <div class="time-predicted">${bus.estimated_time}</div>
             </div>
             <span class="status ${statusClass(bus.status)}">${bus.status}</span>
           `;
