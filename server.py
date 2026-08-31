@@ -153,6 +153,12 @@ def apply_delay(bus, route_def):
     return bus
 
 
+# リアルタイム対応の系統では、予定時刻がこれだけ過去でも「遅延でまだ来ていない
+# かもしれない候補」として拾っておく(実際に来たかどうかは遅延反映後に判定する)
+DELAY_LOOKBACK_MINUTES = 60
+CANDIDATE_COUNT = 10
+
+
 @app.get("/buses")
 def get_buses():
     now = datetime.now(JST)
@@ -160,8 +166,17 @@ def get_buses():
     for rd in ROUTE_DEFS:
         if not rd["enabled"]:
             continue
-        buses = get_next_buses(rd, now)
-        buses = [apply_delay(b, rd) for b in buses]
+
+        lookback = DELAY_LOOKBACK_MINUTES if rd["has_realtime"] else 0
+        candidates = get_next_buses(rd, now, n=CANDIDATE_COUNT, lookback_minutes=lookback)
+        candidates = [apply_delay(b, rd) for b in candidates]
+
+        # 遅延を反映した「実際の到着予定」がまだ来ていない(0分以上先)ものだけを残し、
+        # その実際の時刻順に並べ直してから、改めて3本選ぶ
+        upcoming = [b for b in candidates if b["minutes_from_now"] >= 0]
+        upcoming.sort(key=lambda b: b["minutes_from_now"])
+        buses = upcoming[:3]
+
         routes_output.append({
             "company": rd["company"],
             "direction": rd["direction"],
