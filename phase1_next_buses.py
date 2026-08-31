@@ -129,7 +129,14 @@ def time_to_minutes(t):
     return int(h) * 60 + int(m)
 
 
-def get_next_buses(route_def, as_of, n=3):
+def get_next_buses(route_def, as_of, n=3, lookback_minutes=0):
+    """
+    as_ofから見た次の便を最大n件返す。
+
+    lookback_minutes: 予定時刻がこの分数だけ過去のものも候補に含める。
+    リアルタイムの遅延で「予定時刻は過ぎたがまだ来ていない」便を、
+    server.py側で遅延を反映してから拾い直せるようにするための余白。
+    """
     g = load_gtfs(route_def["data_dir"])
     valid_services = get_valid_service_ids(as_of.date(), g["calendar"], g["calendar_dates"])
 
@@ -146,7 +153,7 @@ def get_next_buses(route_def, as_of, n=3):
     merged["minutes"] = merged["arrival_time"].apply(time_to_minutes)
     now_minutes = as_of.hour * 60 + as_of.minute
 
-    upcoming = merged[merged["minutes"] >= now_minutes].sort_values("minutes").head(n)
+    upcoming = merged[merged["minutes"] >= now_minutes - lookback_minutes].sort_values("minutes").head(n)
 
     results = []
     for _, row in upcoming.iterrows():
