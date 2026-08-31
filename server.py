@@ -22,7 +22,7 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from typing import Optional
@@ -176,6 +176,12 @@ def get_buses():
         upcoming = [b for b in candidates if b["minutes_from_now"] >= 0]
         upcoming.sort(key=lambda b: b["minutes_from_now"])
         buses = upcoming[:3]
+
+        # 表示用: 遅延を反映した「到着予想時刻」を時計表示(HH:MM)で計算しておく
+        # (元の予定時刻 + 遅延分。now基準の相対分数から逆算するので日またぎも自然に処理できる)
+        for b in buses:
+            estimated_dt = now + timedelta(minutes=b["minutes_from_now"])
+            b["estimated_time"] = estimated_dt.strftime("%H:%M")
 
         routes_output.append({
             "company": rd["company"],
